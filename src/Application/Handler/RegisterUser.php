@@ -23,6 +23,11 @@ class RegisterUser
         if ($this->users->findByEmail($email) !== null) {
             throw new UserAlreadyExists("A user with email {$email} already exists.");
         }
+        
+        if ($plainPassword === '') {
+            throw new \DomainException('Empty password hash is not allowed.');
+        }
+
         $passwordHash = $this->hasher->hashPassword($plainPassword);
         $user = new User($id, new Email($email), PasswordHash::fromHash($passwordHash));
         $this->users->save($user);

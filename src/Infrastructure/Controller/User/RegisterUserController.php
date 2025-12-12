@@ -14,13 +14,7 @@ final class RegisterUserController extends AbstractController
 {
     public function __invoke(Request $request, RegisterUser $registerUser): JsonResponse
     {
-        $raw = $request->getContent() ?: '{}';
-        $data = json_decode($raw, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return new JsonResponse(['error' => 'Malformed JSON payload'], 400);
-        }
-
-        //$data = json_decode($request->getContent() ?: '{}', true);
+        $data = json_decode($request->getContent() ?: '{}', true);
         $id = Uuid::v4()->toRfc4122();
         $email = $data['email'] ?? '';
         $password = $data['password'] ?? '';

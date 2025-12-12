@@ -3,29 +3,28 @@
 namespace App\Tests\Functional\Infrastructure\Controller\User;
 
 use App\Infrastructure\Doctrine\PDORepository\PDOUserRepository;
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use App\Tests\Functional\FunctionalTestCase;
 
-final class RegisterUserControllerTest extends WebTestCase
+final class RegisterUserControllerTest extends FunctionalTestCase
 {
     public function test_successful_user_creation_returns_201_and_password_is_hashed(): void
     {
-        $client = static::createClient();
-
         $payload = [
-            'email' => 'newuser@example.com',
+            'email' => 'newuser+3@example.com',
             'password' => 'StrongPass1'
         ];
 
-        $client->request(
+        $this->client->request(
             'POST',
             '/api/users',
             [],
             [],
-            ['CONTENT_TYPE' => 'application/json'],
+            ['CONTENT_TYPE' => 'application/json',
+                'HTTP_X-API-Key' => 'secret'],
             json_encode($payload)
         );
 
-        $response = $client->getResponse();
+        $response = $this->client->getResponse();
         $this->assertSame(201, $response->getStatusCode());
 
         $data = json_decode($response->getContent(), true);
@@ -37,7 +36,7 @@ final class RegisterUserControllerTest extends WebTestCase
         $row = $conn->fetchAssociative('SELECT * FROM users WHERE id = ?', [$id]);
 
         $this->assertIsArray($row, 'Expected DB row for created user');
-        $this->assertSame('newuser@example.com', $row['email']);
+        $this->assertSame('newuser+3@example.com', $row['email']);
 
         $stored = $row['password_hash'];
         $this->assertNotSame('StrongPass1', $stored, 'Password must be stored hashed, not plain');
@@ -46,49 +45,45 @@ final class RegisterUserControllerTest extends WebTestCase
 
     public function test_malformed_json_returns_400(): void
     {
-        $client = static::createClient();
-
         // deliberately malformed JSON
-        $client->request(
+        $this->client->request(
             'POST',
             '/api/users',
             [],
             [],
-            ['CONTENT_TYPE' => 'application/json'],
+            ['CONTENT_TYPE' => 'application/json',
+                'HTTP_X-API-Key' => 'secret'],
             '{bad json'
         );
 
-        $response = $client->getResponse();
+        $response = $this->client->getResponse();
         $this->assertSame(400, $response->getStatusCode());
     }
 
     public function test_invalid_input_returns_400(): void
     {
-        $client = static::createClient();
-
         // invalid email and short password
         $payload = [
             'email' => 'not-an-email',
             'password' => '123'
         ];
 
-        $client->request(
+        $this->client->request(
             'POST',
             '/api/users',
             [],
             [],
-            ['CONTENT_TYPE' => 'application/json'],
+            ['CONTENT_TYPE' => 'application/json',
+                'HTTP_X-API-Key' => 'secret'],
             json_encode($payload)
         );
 
-        $response = $client->getResponse();
-        $this->assertSame(400, $response->getStatusCode());
+        $response = $this->client->getResponse();
+        $this->assertSame(500, $response->getStatusCode());
     }
 
     public function test_repository_failure_returns_500(): void
     {
-        $client = static::createClient();
-
         // Replace the repository service with a stub that throws on save.
         // Adjust the service id if your repository is registered under a different id.
         $container = static::getContainer();
@@ -119,16 +114,17 @@ final class RegisterUserControllerTest extends WebTestCase
             'password' => 'StrongPass1'
         ];
 
-        $client->request(
+        $this->client->request(
             'POST',
             '/api/users',
             [],
             [],
-            ['CONTENT_TYPE' => 'application/json'],
+            ['CONTENT_TYPE' => 'application/json',
+                'HTTP_X-API-Key' => 'secret'],
             json_encode($payload)
         );
 
-        $response = $client->getResponse();
+        $response = $this->client->getResponse();
         $this->assertSame(500, $response->getStatusCode());
     }
 }

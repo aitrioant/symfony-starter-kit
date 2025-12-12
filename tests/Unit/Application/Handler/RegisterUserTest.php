@@ -23,7 +23,7 @@ final class RegisterUserTest extends TestCase
         $hasher = $this->createMock(PasswordHasherInterface::class);
         $hasher->expects($this->once())
             ->method('hashPassword')
-            ->with($id, $email, $this->equalTo($plainPassword))
+            ->with($this->equalTo($plainPassword))
             ->willReturn($hashedPassword);
 
         $repository = $this->createMock(UserRepositoryInterface::class);

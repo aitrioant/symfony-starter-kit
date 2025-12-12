@@ -15,5 +15,4 @@ class PHPPasswordHasher implements PasswordHasherInterface
     {
         return $this->nativePasswordHasher->hash($plainPassword);
     }
-
 }
