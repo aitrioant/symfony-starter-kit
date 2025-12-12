@@ -30,7 +30,7 @@ final class UserAdapter implements UserInterface, PasswordAuthenticatedUserInter
 
     public function getPassword(): ?string
     {
-        return $this->user->passwordHash();
+        return $this->user->passwordHash()->toString();
     }
 
     public function getSalt(): ?string

@@ -23,4 +23,17 @@ services:
     # please note that last definitions always *replace* previous ones
 
     App\Application\Security\PasswordHasherInterface:
-        alias: 'App\Infrastructure\Security\SymfonyPasswordHasher'
+        alias: 'App\Infrastructure\Security\PHPPasswordHasher'
+
+    Symfony\Component\PasswordHasher\Hasher\NativePasswordHasher:
+        public: true
+
+    App\Infrastructure\Middleware\Request\:
+        resource: ../src/Infrastructure/Middleware/Request/*
+        tags: [ 'app.api_middleware' ]
+
+    App\Infrastructure\Subscriber\RequestMiddlewareSubscriber:
+        arguments:
+            - !tagged_iterator app.api_middleware
+        tags:
+            - { name: kernel.event_subscriber }
