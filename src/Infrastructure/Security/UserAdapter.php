@@ -22,7 +22,6 @@ final class UserAdapter implements UserInterface, PasswordAuthenticatedUserInter
         return $this->user->email();
     }
 
-    // For older Symfony versions you can add getUsername() returning the same value
     public function getRoles(): array
     {
         return $this->roles;
