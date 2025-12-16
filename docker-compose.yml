@@ -4,6 +4,8 @@ services:
             context: .
             dockerfile: docker/Dockerfile
         container_name: symfony_php
+        env_file:
+            - .env
         volumes:
             - ./:/app
             - ./docker/php/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
