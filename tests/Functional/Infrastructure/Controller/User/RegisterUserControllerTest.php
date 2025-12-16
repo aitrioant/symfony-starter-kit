@@ -2,7 +2,7 @@
 
 namespace App\Tests\Functional\Infrastructure\Controller\User;
 
-use App\Infrastructure\Doctrine\PDORepository\PDOUserRepository;
+use App\Infrastructure\Doctrine\DoctrineUserRepository;
 use App\Tests\Functional\FunctionalTestCase;
 
 final class RegisterUserControllerTest extends FunctionalTestCase
@@ -107,7 +107,7 @@ final class RegisterUserControllerTest extends FunctionalTestCase
         };
 
         // Replace concrete repository service; change the class name if needed.
-        $container->set(PDOUserRepository::class, $stubRepo);
+        $container->set(DoctrineUserRepository::class, $stubRepo);
 
         $payload = [
             'email' => 'willfail@example.com',
