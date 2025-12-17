@@ -23,7 +23,7 @@ final class ControllerPasswordExposureTest extends FunctionalTestCase
         );
 
         $response = $this->client->getResponse();
-        $this->assertSame(201, $response->getStatusCode());
+        $this->assertSame(202, $response->getStatusCode());
 
         $data = json_decode($response->getContent(), true);
         $this->assertIsArray($data);

@@ -4,6 +4,7 @@ namespace App\Tests\Unit\Infrastructure\Doctrine\Mapper;
 
 use App\Domain\Entity\User;
 use App\Domain\ValueObject\Email;
+use App\Domain\ValueObject\Id;
 use App\Domain\ValueObject\PasswordHash;
 use App\Infrastructure\Doctrine\Mapper\UserMapper;
 use PHPUnit\Framework\TestCase;
@@ -18,7 +19,7 @@ final class UserMapperTest extends TestCase
         $email = new Email('alice@example.com');
         $hash = PasswordHash::fromHash(password_hash('secret', PASSWORD_DEFAULT));
 
-        $user = new User($id, $email, $hash);
+        $user = new User(Id::fromString($id), $email, $hash);
 
         $row = $mapper->toRow($user);
 
