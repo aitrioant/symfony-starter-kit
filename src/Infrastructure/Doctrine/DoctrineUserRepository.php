@@ -5,6 +5,7 @@ namespace App\Infrastructure\Doctrine;
 use App\Domain\Entity\User;
 use App\Domain\Repository\UserRepositoryInterface;
 use App\Domain\ValueObject\Email;
+use App\Domain\ValueObject\Id;
 use App\Domain\ValueObject\PasswordHash;
 use App\Infrastructure\Doctrine\Domain\Entity\OrmUser;
 use Doctrine\ORM\EntityManagerInterface;
@@ -29,7 +30,7 @@ final class DoctrineUserRepository implements UserRepositoryInterface
 
     private function toDomain(OrmUser $orm): User
     {
-        return new User($orm->getId(), new Email($orm->getEmail()), PasswordHash::fromHash($orm->getPasswordHash()));
+        return new User(Id::fromString($orm->getId()), new Email($orm->getEmail()), PasswordHash::fromHash($orm->getPasswordHash()));
     }
 
     public function findByEmail(string $email): ?User
