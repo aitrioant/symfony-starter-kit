@@ -2,6 +2,7 @@
 
 namespace App\Tests\Unit\Application;
 
+use App\Application\Command\RegisterUserCommand;
 use App\Application\Handler\RegisterUser;
 use App\Application\Security\PasswordHasherInterface;
 use App\Domain\Entity\User;
@@ -50,8 +51,9 @@ final class HandlerPasswordStorageTest extends TestCase
                 return password_verify($plain, $hash);
             }));
 
+        $command = new RegisterUserCommand($id, $email, $plain);
         $handler = new RegisterUser($repository, $hasher);
-        $handler->__invoke($id, $email, $plain);
+        $handler->__invoke($command);
     }
 
     private static function makeHasher(): PasswordHasherInterface
