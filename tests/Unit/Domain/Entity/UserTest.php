@@ -5,6 +5,7 @@ namespace App\Tests\Unit\Domain\Entity;
 use App\Domain\Entity\User;
 use App\Domain\Exception\InvalidEmail;
 use App\Domain\ValueObject\Email;
+use App\Domain\ValueObject\Id;
 use App\Domain\ValueObject\PasswordHash;
 use PHPUnit\Framework\TestCase;
 
@@ -18,7 +19,7 @@ final class UserTest extends TestCase
         $invalidEmail = 'not-an-email';
         $hash = password_hash('secret', PASSWORD_DEFAULT);
 
-        new User($id, new Email($invalidEmail), $hash);
+        new User(Id::fromString($id), new Email($invalidEmail), PasswordHash::fromHash($hash));
     }
 
     public function test_constructor_throws_on_empty_password_hash(): void
@@ -29,7 +30,7 @@ final class UserTest extends TestCase
         $email = 'user@example.com';
         $emptyHash = '';
 
-        new User($id, new Email($email), PasswordHash::fromHash($emptyHash));
+        new User(Id::fromString($id), new Email($email), PasswordHash::fromHash($emptyHash));
     }
 
     public function test_change_email_returns_new_instance_and_validates(): void
@@ -38,7 +39,7 @@ final class UserTest extends TestCase
         $email = 'user@example.com';
         $hash = password_hash('secret', PASSWORD_DEFAULT);
 
-        $user = new User($id, new Email($email), PasswordHash::fromHash($hash));
+        $user = new User(Id::fromString($id), new Email($email), PasswordHash::fromHash($hash));
 
         $newEmail = 'new@example.com';
         $newUser = $user->changeEmail($newEmail);
@@ -60,7 +61,7 @@ final class UserTest extends TestCase
         $plain = 'super-secret';
         $hash = password_hash($plain, PASSWORD_DEFAULT);
 
-        $user = new User($id, new Email($email), PasswordHash::fromHash($hash));
+        $user = new User(Id::fromString($id), new Email($email), PasswordHash::fromHash($hash));
 
         $this->assertTrue($user->verifyPassword($plain));
         $this->assertFalse($user->verifyPassword('wrong-password'));

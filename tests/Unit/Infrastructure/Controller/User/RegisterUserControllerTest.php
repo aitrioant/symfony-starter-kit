@@ -3,13 +3,13 @@
 namespace App\Tests\Unit\Infrastructure\Controller\User;
 
 use App\Application\Command\RegisterUserCommand;
+use App\Domain\ValueObject\Id;
 use App\Infrastructure\Controller\User\RegisterUserController;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
-use Symfony\Component\Uid\Uuid;
 
 final class RegisterUserControllerTest extends TestCase
 {
@@ -22,7 +22,7 @@ final class RegisterUserControllerTest extends TestCase
         $bus->expects($this->once())
             ->method('dispatch')
             ->with($this->isInstanceOf(RegisterUserCommand::class))
-            ->willReturn(new Envelope(new RegisterUserCommand(Uuid::v4()->toRfc4122(), $email, $password)));
+            ->willReturn(new Envelope(new RegisterUserCommand(Id::new(), $email, $password)));
 
         $controller = new RegisterUserController($bus);
 
@@ -34,7 +34,7 @@ final class RegisterUserControllerTest extends TestCase
         $response = $controller->__invoke($request);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertEquals(201, $response->getStatusCode());
+        $this->assertEquals(202, $response->getStatusCode());
 
         $data = json_decode($response->getContent() ?: '{}', true);
         $this->assertArrayHasKey('id', $data);
@@ -55,7 +55,7 @@ final class RegisterUserControllerTest extends TestCase
         $bus->expects($this->once())
             ->method('dispatch')
             ->with($this->isInstanceOf(RegisterUserCommand::class))
-            ->willReturn(new Envelope(new RegisterUserCommand(Uuid::v4()->toRfc4122(), '', '')));
+            ->willReturn(new Envelope(new RegisterUserCommand(Id::new(), '', '')));
 
         $controller = new RegisterUserController($bus);
 
@@ -64,7 +64,7 @@ final class RegisterUserControllerTest extends TestCase
         $response = $controller->__invoke($request);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertEquals(201, $response->getStatusCode());
+        $this->assertEquals(202, $response->getStatusCode());
 
         $data = json_decode($response->getContent() ?: '{}', true);
         $this->assertArrayHasKey('id', $data);

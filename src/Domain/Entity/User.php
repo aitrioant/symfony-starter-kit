@@ -3,15 +3,16 @@
 namespace App\Domain\Entity;
 
 use App\Domain\ValueObject\Email;
+use App\Domain\ValueObject\Id;
 use App\Domain\ValueObject\PasswordHash;
 
 final class User
 {
-    private string $id;
+    private Id $id;
     private Email $email;
     private PasswordHash $passwordHash;
 
-    public function __construct(string $id, Email $email, PasswordHash $passwordHash)
+    public function __construct(Id $id, Email $email, PasswordHash $passwordHash)
     {
         $this->id = $id;
         $this->email = $email;
@@ -20,7 +21,7 @@ final class User
 
     public function id(): string
     {
-        return $this->id;
+        return (string)$this->id;
     }
 
     public function email(): string

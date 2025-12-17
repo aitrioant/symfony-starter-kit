@@ -4,6 +4,7 @@ namespace App\Tests\Integration\Infrastructure\Doctrine\PDORepository;
 
 use App\Domain\Entity\User;
 use App\Domain\ValueObject\Email;
+use App\Domain\ValueObject\Id;
 use App\Domain\ValueObject\PasswordHash;
 use App\Infrastructure\Doctrine\Mapper\UserMapper;
 use App\Infrastructure\Doctrine\PDORepository\PDOUserRepository;
@@ -22,7 +23,7 @@ final class PDOUserRepositoryTest extends TestCase
         $plain = 'integration-secret';
         $hash = PasswordHash::fromHash(password_hash($plain, PASSWORD_DEFAULT));
 
-        $user = new User($id, $email, $hash);
+        $user = new User(Id::fromString($id), $email, $hash);
 
         $this->repo->save($user);
 

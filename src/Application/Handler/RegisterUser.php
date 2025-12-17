@@ -8,6 +8,7 @@ use App\Domain\Entity\User;
 use App\Domain\Exception\UserAlreadyExists;
 use App\Domain\Repository\UserRepositoryInterface;
 use App\Domain\ValueObject\Email;
+use App\Domain\ValueObject\Id;
 use App\Domain\ValueObject\PasswordHash;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
@@ -32,7 +33,9 @@ class RegisterUser
         }
 
         $passwordHash = $this->hasher->hashPassword($command->plainPassword);
-        $user = new User($command->id, new Email($command->email), PasswordHash::fromHash($passwordHash));
+
+        $user = new User(Id::fromString($command->id), new Email($command->email), PasswordHash::fromHash($passwordHash));
+
         $this->users->save($user);
     }
 }

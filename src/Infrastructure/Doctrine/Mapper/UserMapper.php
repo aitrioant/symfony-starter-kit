@@ -5,6 +5,7 @@ namespace App\Infrastructure\Doctrine\Mapper;
 use App\Domain\Entity\User;
 use App\Domain\Exception\InvalidEmail;
 use App\Domain\ValueObject\Email;
+use App\Domain\ValueObject\Id;
 use App\Domain\ValueObject\PasswordHash;
 
 final class UserMapper
@@ -17,7 +18,7 @@ final class UserMapper
     public function toRow(User $user): array
     {
         return [
-            'id' => $user->id(),
+            'id' => (string)$user->id(),
             'email' => (string)$user->email(), // adapt if email() returns VO or string
             'password_hash' => $user->passwordHash()->toString(),
         ];
@@ -31,9 +32,10 @@ final class UserMapper
      */
     public function toDomain(array $row): User
     {
+        $id = Id::fromString($row['id']);
         $email = new Email($row['email']);
         $passwordHash = PasswordHash::fromHash($row['password_hash']);
 
-        return new User($row['id'], $email, $passwordHash);
+        return new User($id, $email, $passwordHash);
     }
 }

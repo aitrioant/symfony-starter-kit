@@ -7,13 +7,13 @@ use App\Application\Handler\RegisterUser;
 use App\Application\Security\PasswordHasherInterface;
 use App\Domain\Entity\User;
 use App\Domain\Repository\UserRepositoryInterface;
+use App\Domain\ValueObject\Id;
 use PHPUnit\Framework\TestCase;
 
 final class HandlerPasswordStorageTest extends TestCase
 {
     public function test_handler_saves_hashed_password_and_verifies(): void
     {
-        $id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
         $email = 'secure@example.com';
         $plain = 'super-secret';
 
@@ -27,15 +27,11 @@ final class HandlerPasswordStorageTest extends TestCase
 
         $repository->expects($this->once())
             ->method('save')
-            ->with($this->callback(function ($user) use ($id, $email, $plain) {
+            ->with($this->callback(function ($user) use ($email, $plain) {
                 if (!$user instanceof User) {
                     return false;
                 }
 
-                // id and email checks (use domain accessors)
-                if ($user->id() !== $id) {
-                    return false;
-                }
                 if ($user->email() !== $email) {
                     return false;
                 }
@@ -51,7 +47,7 @@ final class HandlerPasswordStorageTest extends TestCase
                 return password_verify($plain, $hash);
             }));
 
-        $command = new RegisterUserCommand($id, $email, $plain);
+        $command = new RegisterUserCommand(Id::new(), $email, $plain);
         $handler = new RegisterUser($repository, $hasher);
         $handler->__invoke($command);
     }

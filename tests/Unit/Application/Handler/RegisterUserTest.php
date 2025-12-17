@@ -9,6 +9,7 @@ use App\Domain\Entity\User;
 use App\Domain\Exception\UserAlreadyExists;
 use App\Domain\Repository\UserRepositoryInterface;
 use App\Domain\ValueObject\Email;
+use App\Domain\ValueObject\Id;
 use App\Domain\ValueObject\PasswordHash;
 use PHPUnit\Framework\TestCase;
 
@@ -16,7 +17,7 @@ final class RegisterUserTest extends TestCase
 {
     public function test_invoke_hashes_password_and_saves_user(): void
     {
-        $id = '11111111-1111-4111-8111-111111111111';
+        $id = Id::new();
         $email = 'user@example.com';
         $plainPassword = 'secret';
         $hashedPassword = 'hashed-secret';
@@ -40,7 +41,7 @@ final class RegisterUserTest extends TestCase
                     return false;
                 }
 
-                return $user->id() === $id
+                return $user->id() === (string)$id
                     && $user->email() === $email
                     && $user->passwordHash()->toString() === $hashedPassword;
             }));
@@ -52,7 +53,7 @@ final class RegisterUserTest extends TestCase
 
     public function test_invoke_throws_when_email_already_exists(): void
     {
-        $existingId = '22222222-2222-4222-8222-222222222222';
+        $existingId = Id::fromString('22222222-2222-4222-8222-222222222222');
         $email = 'user@example.com';
         $plainPassword = 'secret';
 
