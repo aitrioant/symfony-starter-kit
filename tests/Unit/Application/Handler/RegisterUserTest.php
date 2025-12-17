@@ -2,6 +2,7 @@
 
 namespace App\Tests\Unit\Application\Handler;
 
+use App\Application\Command\RegisterUserCommand;
 use App\Application\Handler\RegisterUser;
 use App\Application\Security\PasswordHasherInterface;
 use App\Domain\Entity\User;
@@ -44,8 +45,9 @@ final class RegisterUserTest extends TestCase
                     && $user->passwordHash()->toString() === $hashedPassword;
             }));
 
+        $command = new RegisterUserCommand($id, $email, $plainPassword);
         $handler = new RegisterUser($repository, $hasher);
-        $handler->__invoke($id, $email, $plainPassword);
+        $handler->__invoke($command);
     }
 
     public function test_invoke_throws_when_email_already_exists(): void
@@ -65,10 +67,11 @@ final class RegisterUserTest extends TestCase
         $hasher = $this->createMock(PasswordHasherInterface::class);
         $hasher->expects($this->never())->method('hashPassword');
 
-        $handler = new RegisterUser($repository, $hasher);
 
         $this->expectException(UserAlreadyExists::class);
 
-        $handler->__invoke($existingId, $email, $plainPassword);
+        $command = new RegisterUserCommand($existingId, $email, $plainPassword);
+        $handler = new RegisterUser($repository, $hasher);
+        $handler->__invoke($command);
     }
 }

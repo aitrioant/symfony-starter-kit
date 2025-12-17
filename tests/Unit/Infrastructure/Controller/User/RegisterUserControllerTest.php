@@ -2,11 +2,14 @@
 
 namespace App\Tests\Unit\Infrastructure\Controller\User;
 
-use App\Application\Handler\RegisterUser;
+use App\Application\Command\RegisterUserCommand;
 use App\Infrastructure\Controller\User\RegisterUserController;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Messenger\Envelope;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Uid\Uuid;
 
 final class RegisterUserControllerTest extends TestCase
 {
@@ -15,23 +18,20 @@ final class RegisterUserControllerTest extends TestCase
         $email = 'user@example.com';
         $password = 'secret';
 
-        $registerUser = $this->createMock(RegisterUser::class);
-        $registerUser->expects($this->once())
-            ->method('__invoke')
-            ->with(
-                $this->callback($this->uuidV4Matcher()),
-                $this->equalTo($email),
-                $this->equalTo($password)
-            );
+        $bus = $this->createMock(MessageBusInterface::class);
+        $bus->expects($this->once())
+            ->method('dispatch')
+            ->with($this->isInstanceOf(RegisterUserCommand::class))
+            ->willReturn(new Envelope(new RegisterUserCommand(Uuid::v4()->toRfc4122(), $email, $password)));
 
-        $controller = new RegisterUserController();
+        $controller = new RegisterUserController($bus);
 
         $request = new Request([], [], [], [], [], [], json_encode([
             'email' => $email,
             'password' => $password,
         ]));
 
-        $response = $controller->__invoke($request, $registerUser);
+        $response = $controller->__invoke($request);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertEquals(201, $response->getStatusCode());
@@ -51,20 +51,17 @@ final class RegisterUserControllerTest extends TestCase
 
     public function test_invoke_with_missing_fields_uses_empty_strings(): void
     {
-        $registerUser = $this->createMock(RegisterUser::class);
-        $registerUser->expects($this->once())
-            ->method('__invoke')
-            ->with(
-                $this->callback($this->uuidV4Matcher()),
-                $this->equalTo(''),
-                $this->equalTo('')
-            );
+        $bus = $this->createMock(MessageBusInterface::class);
+        $bus->expects($this->once())
+            ->method('dispatch')
+            ->with($this->isInstanceOf(RegisterUserCommand::class))
+            ->willReturn(new Envelope(new RegisterUserCommand(Uuid::v4()->toRfc4122(), '', '')));
 
-        $controller = new RegisterUserController();
+        $controller = new RegisterUserController($bus);
 
         $request = new Request([], [], [], [], [], [], '{}');
 
-        $response = $controller->__invoke($request, $registerUser);
+        $response = $controller->__invoke($request);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertEquals(201, $response->getStatusCode());
