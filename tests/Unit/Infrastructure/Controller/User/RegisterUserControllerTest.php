@@ -5,6 +5,7 @@ namespace App\Tests\Unit\Infrastructure\Controller\User;
 use App\Application\Command\RegisterUserCommand;
 use App\Domain\ValueObject\Id;
 use App\Infrastructure\Controller\User\RegisterUserController;
+use App\Tests\Helper;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -38,15 +39,7 @@ final class RegisterUserControllerTest extends TestCase
 
         $data = json_decode($response->getContent() ?: '{}', true);
         $this->assertArrayHasKey('id', $data);
-        $this->assertTrue(($this->uuidV4Matcher())($data['id']));
-    }
-
-    private function uuidV4Matcher(): callable
-    {
-        return function ($id) {
-            // RFC4122 v4 like: 8-4-4-4-12 hex chars
-            return is_string($id) && preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id) === 1;
-        };
+        $this->assertTrue((Helper::uuidV4Matcher())($data['id']));
     }
 
     public function test_invoke_with_missing_fields_uses_empty_strings(): void
@@ -68,6 +61,6 @@ final class RegisterUserControllerTest extends TestCase
 
         $data = json_decode($response->getContent() ?: '{}', true);
         $this->assertArrayHasKey('id', $data);
-        $this->assertTrue(($this->uuidV4Matcher())($data['id']));
+        $this->assertTrue((Helper::uuidV4Matcher())($data['id']));
     }
 }
