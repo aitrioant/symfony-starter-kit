@@ -1,59 +1,41 @@
-# Symfony Backend Starter Kit — Scalable Architecture with DDD & AI
+# Symfony Backend Starter Kit (DDD / Clean Architecture)
 
-This repository is a **production-ready backend starter kit** built with **Symfony**, designed to demonstrate how to
-structure **scalable, maintainable APIs** using **Domain-Driven Design (DDD)** and **clean architecture principles**.
+This project is a **Symfony backend starter kit** that I built to explore and demonstrate how to structure a **scalable,
+long-lived API** using **Domain-Driven Design (DDD)** and clean architecture principles.
 
-Rather than focusing on features, this project focuses on **engineering quality**: clear boundaries, explicit use cases,
-testability, and safe integration of external services such as AI.
-
----
-
-## 👨‍💻 What This Project Demonstrates
-
-This codebase intentionally showcases skills that are relevant for **mid to senior backend roles**:
-
-- Designing **clean, modular architectures**
-- Applying **DDD in a pragmatic way**
-- Avoiding framework-driven domain models
-- Writing **use-case-oriented code** instead of generic CRUD
-- Integrating **AI services without leaking infrastructure concerns**
-- Building systems that are **easy to test and evolve**
+I’ve worked on enough Symfony projects where things start clean and slowly degrade into tightly coupled code. This
+repository is my attempt at setting a solid baseline that makes **change cheap** and **architecture visible**.
 
 ---
 
-## 🧠 Architectural Decisions (Why This Matters)
+## What this project focuses on
 
-### Domain-Driven Design (DDD)
+Instead of feature richness, I focused on:
 
-- Business logic is isolated from frameworks and infrastructure
-- Entities and value objects enforce invariants
-- Application services express business use cases explicitly
+- Clear separation between domain, application and infrastructure
+- Explicit use cases instead of generic CRUD
+- A domain that does **not** depend on Symfony or Doctrine
+- Infrastructure that can be replaced without rewriting business logic
+- Making AI integration a normal dependency, not a special case
 
-### Hexagonal Architecture
-
-- Dependencies point inward
-- Infrastructure is replaceable (database, AI provider, hashing, etc.)
-- Clear separation between **what the system does** and **how it does it**
-
-### Explicit Use Cases
-
-Instead of:
-
-Controller → Entity → Repository
-
-The project follows:
-
-Controller → Use Case → Domain → Port → Adapter
-
-This results in code that is:
-
-- Easier to reason about
-- Safer to change
-- More aligned with real business workflows
+Some parts may feel slightly over-engineered for the current feature set — that’s intentional.
 
 ---
 
-## 🔐 Implemented Use Case: User Registration
+## Architectural approach
+
+The project follows a **hexagonal architecture**:
+
+- The **Domain** contains entities, value objects and business rules
+- The **Application layer** coordinates use cases
+- The **Infrastructure layer** handles Symfony, Doctrine, HTTP and external services
+
+Dependencies always point inward.
+
+I deliberately avoided putting logic in controllers, entities tied to Doctrine, or framework-specific services inside
+the domain.
+
+## Implemented Use Case: User Registration
 
 A complete **User Registration** flow is implemented to serve as a reference:
 
@@ -65,9 +47,9 @@ A complete **User Registration** flow is implemented to serve as a reference:
 
 This use case illustrates how new features can be added **without modifying existing domain logic**.
 
----
+--- 
 
-## 🗂 Example Bounded Context: Notes
+## Example Bounded Context: Notes
 
 To demonstrate extensibility, the project includes a simple **Notes** context.
 
@@ -91,7 +73,7 @@ It shows how **business rules scale naturally** within the architecture.
 
 ---
 
-## 🤖 AI Integration Without Architectural Compromise
+## AI Integration Without Architectural Compromise
 
 AI is integrated as **just another infrastructure dependency**.
 
@@ -111,7 +93,7 @@ AI **supports** the domain — it never controls it.
 
 ---
 
-## 🧪 Testing Philosophy
+## Testing Philosophy
 
 Testing follows architectural boundaries:
 
@@ -123,45 +105,36 @@ Testing follows architectural boundaries:
 
 ### Application Tests
 
-- Validate use case behavior
+- Validate use case behaviour
 - Infrastructure replaced by fakes or stubs
 - AI mocked at the port level
 
 ### Result
 
-Tests focus on **behavior and intent**, not implementation details — a common weakness in many codebases.
+Tests focus on **behaviour and intent**, not implementation details — a common weakness in many codebases.
 
 ---
 
-## 📦 Technology Stack
+## Technology Stack
 
 - **PHP 8+**
 - **Symfony**
 - **Doctrine ORM** (infrastructure layer)
 - **PHPUnit**
-- **Hexagonal Architecture**
-- **AI provider via adapter (e.g. OpenAI)**
 
 ---
 
-## 🚀 Why This Project Exists
+## Why this repository exists
 
-Many Symfony projects start clean but degrade over time due to:
+This project exists mainly as:
 
-- Tight coupling
-- Framework-driven design
-- Unclear business boundaries
-
-This starter kit demonstrates how to:
-
-- Keep complexity under control
-- Add features without fear
-- Integrate modern tools (AI) responsibly
-- Build backends that age well
+- A personal reference
+- A discussion piece for technical interviews
+- A starting point for real projects
 
 ---
 
-## 🎯 Ideal Use Cases
+## Ideal Use Cases
 
 This project is relevant if you are building:
 
