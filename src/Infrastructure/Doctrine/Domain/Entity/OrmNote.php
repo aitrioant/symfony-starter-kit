@@ -36,7 +36,7 @@ final class OrmNote
         $this->ownerId = $ownerId;
         $this->archived = false;
         $this->createdAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTimeImmutable();
+        $this->updatedAt = clone $this->createdAt;
     }
 
     public function getId(): string

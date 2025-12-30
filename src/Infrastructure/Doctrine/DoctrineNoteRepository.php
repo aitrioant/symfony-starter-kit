@@ -19,6 +19,7 @@ final readonly class DoctrineNoteRepository implements NoteRepositoryInterface
 
     public function findById(string $id): ?Note
     {
+        /** @var OrmNote|null $orm */
         $orm = $this->getRepository()->find($id);
         return $orm ? $this->toDomain($orm) : null;
     }

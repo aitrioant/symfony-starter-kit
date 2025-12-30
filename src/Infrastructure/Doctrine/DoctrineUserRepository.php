@@ -19,6 +19,7 @@ final class DoctrineUserRepository implements UserRepositoryInterface
 
     public function findById(string $id): ?User
     {
+        /** @var OrmUser|null $orm */
         $orm = $this->getRepository()->find($id);
         return $orm ? $this->toDomain($orm) : null;
     }

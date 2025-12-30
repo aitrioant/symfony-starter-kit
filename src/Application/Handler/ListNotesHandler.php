@@ -5,7 +5,9 @@ namespace App\Application\Handler;
 use App\Application\Query\ListNotesQuery;
 use App\Domain\Repository\NoteRepositoryInterface;
 use App\Domain\ValueObject\NoteOwner;
+use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
+#[AsMessageHandler(bus: 'query.bus')]
 final readonly class ListNotesHandler
 {
     public function __construct(private NoteRepositoryInterface $repository)
