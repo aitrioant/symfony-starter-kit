@@ -12,8 +12,8 @@ final class RegisterUserControllerTest extends FunctionalTestCase
     {
         $container = static::getContainer();
 
-        $transport = $container->get('messenger.transport.sync');
-        $this->assertInstanceOf(InMemoryTransport::class, $transport, '`messenger.transport.sync` must be an InMemoryTransport in tests.');
+        $transport = $container->get('messenger.transport.async');
+        $this->assertInstanceOf(InMemoryTransport::class, $transport, '`messenger.transport.async` must be an InMemoryTransport in tests.');
 
         $transport->reset();
 

@@ -2,8 +2,10 @@
 
 namespace App\Tests\Functional\Infrastructure\Controller\Note;
 
+use App\Application\Command\CreateNoteCommand;
+use App\Application\Handler\CreateNoteHandler;
+use App\Domain\ValueObject\Id;
 use App\Tests\Functional\FunctionalTestCase;
-use Symfony\Component\Messenger\Transport\InMemory\InMemoryTransport;
 
 class ListNotesControllerTest extends FunctionalTestCase
 {
@@ -13,11 +15,6 @@ class ListNotesControllerTest extends FunctionalTestCase
     public function test_successful_note_listing_returns_202(): void
     {
         $container = static::getContainer();
-
-        $transport = $container->get('messenger.transport.sync');
-        $this->assertInstanceOf(InMemoryTransport::class, $transport, '`messenger.transport.sync` must be an InMemoryTransport in tests.');
-
-        $transport->reset();
 
         $this->client->request(
             'GET',
@@ -36,8 +33,8 @@ class ListNotesControllerTest extends FunctionalTestCase
         $this->assertIsArray($firstNote);
         $this->assertArrayHasKey('id', $firstNote);
         $this->assertSame($this->noteId, $firstNote['id']);
-        $this->assertArrayHasKey('ownerId', $firstNote);
-        $this->assertSame($this->testOwnerId, $firstNote['ownerId']);
+        $this->assertArrayHasKey('owner', $firstNote);
+        $this->assertSame($this->testOwnerId, $firstNote['owner']);
     }
 
     protected function setUp(): void
@@ -46,24 +43,20 @@ class ListNotesControllerTest extends FunctionalTestCase
         $this->client->disableReboot();
 
         $this->testOwnerId = 'testownerid123';
-        $payload = [
-            'ownerId' => $this->testOwnerId,
-            'content' => 'This is a newly created test note content.',
-        ];
 
-        $this->client->request(
-            'POST',
-            '/api/notes',
-            [],
-            [],
-            ['CONTENT_TYPE' => 'application/json', 'HTTP_X-API-Key' => 'secret'],
-            json_encode($payload)
+        // generate id and create command
+        $id = (string)Id::new();
+        $command = new CreateNoteCommand(
+            $id,
+            $this->testOwnerId,
+            'This is a newly created test note content.'
         );
 
-        $response = $this->client->getResponse();
-        $data = json_decode($response->getContent(), true);
-        $this->assertArrayHasKey('id', $data);
+        // call the handler directly so the note is created synchronously in the test DB
+        /** @var CreateNoteHandler $handler */
+        $handler = static::getContainer()->get(CreateNoteHandler::class);
+        $handler($command);
 
-        $this->noteId = $data['id'];
+        $this->noteId = $id;
     }
 }

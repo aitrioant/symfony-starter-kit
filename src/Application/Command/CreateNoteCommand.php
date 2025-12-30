@@ -4,7 +4,7 @@ namespace App\Application\Command;
 
 use Symfony\Component\Messenger\Attribute\AsMessage;
 
-#[AsMessage('sync')]
+#[AsMessage('async')]
 final readonly class CreateNoteCommand
 {
     public function __construct(

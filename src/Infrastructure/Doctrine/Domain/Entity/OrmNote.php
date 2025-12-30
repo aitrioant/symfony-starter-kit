@@ -11,7 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
 final class OrmNote
 {
     #[ORM\Id]
-    #[ORM\Column(type: 'string', length: 32)]
+    #[ORM\Column(type: 'string', length: 36)]
     private string $id;
 
     #[ORM\Column(type: 'text', length: NoteContent::MAX_LENGTH)]

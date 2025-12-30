@@ -16,13 +16,13 @@ final class RegisterUserMessageTransportTest extends KernelTestCase
         self::bootKernel();
         $container = static::getContainer();
 
-        $this->assertTrue($container->has('messenger.transport.sync'), 'Service `messenger.transport.sync` must be configured in test env.');
+        $this->assertTrue($container->has('messenger.transport.async'), 'Service `messenger.transport.async` must be configured in test env.');
 
         /** @var InMemoryTransport $transport */
-        $transport = $container->get('messenger.transport.sync');
+        $transport = $container->get('messenger.transport.async');
 
         // the test environment should inject InMemoryTransport for `sync`
-        $this->assertInstanceOf(InMemoryTransport::class, $transport, '`messenger.transport.sync` must be an InMemoryTransport in tests.');
+        $this->assertInstanceOf(InMemoryTransport::class, $transport, '`messenger.transport.async` must be an InMemoryTransport in tests.');
 
         $transport->reset();
 
