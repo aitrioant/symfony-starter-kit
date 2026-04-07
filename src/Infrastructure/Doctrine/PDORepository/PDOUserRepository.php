@@ -6,15 +6,10 @@ use App\Domain\Entity\User;
 use App\Infrastructure\Doctrine\Mapper\UserMapper;
 use PDO;
 
-final class PDOUserRepository
+final readonly class PDOUserRepository
 {
-    private PDO $pdo;
-    private UserMapper $mapper;
-
-    public function __construct(PDO $pdo, UserMapper $mapper)
+    public function __construct(private PDO $pdo, private UserMapper $mapper)
     {
-        $this->pdo = $pdo;
-        $this->mapper = $mapper;
     }
 
     public function save(User $user): void

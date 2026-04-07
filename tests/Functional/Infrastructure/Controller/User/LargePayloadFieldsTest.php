@@ -12,9 +12,9 @@ final class LargePayloadFieldsTest extends FunctionalTestCase
     {
         $container = static::getContainer();
 
-        $this->assertTrue($container->has('messenger.transport.sync'), 'Service `messenger.transport.sync` must be configured in test env.');
-        $transport = $container->get('messenger.transport.sync');
-        $this->assertInstanceOf(InMemoryTransport::class, $transport, '`messenger.transport.sync` must be an InMemoryTransport in tests.');
+        $this->assertTrue($container->has('messenger.transport.async'), 'Service `messenger.transport.async` must be configured in test env.');
+        $transport = $container->get('messenger.transport.async');
+        $this->assertInstanceOf(InMemoryTransport::class, $transport, '`messenger.transport.async` must be an InMemoryTransport in tests.');
 
         $transport->reset();
 

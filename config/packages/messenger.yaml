@@ -3,8 +3,8 @@ framework:
         default_bus: command.bus
 
         transports:
-            sync:
-                dsn: '%env(MESSENGER_TRANSPORT_DSN_SYNC)%'
+            async:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN_ASYNC)%'
 
                 # default configuration
                 retry_strategy:
@@ -21,6 +21,8 @@ framework:
                     # override all of this with a service that
                     # implements Symfony\Component\Messenger\Retry\RetryStrategyInterface
                     # service: null
+
+            sync: '%env(MESSENGER_TRANSPORT_DSN_SYNC)%'
 
             failed: '%env(MESSENGER_TRANSPORT_DSN_SYNC)%'
 

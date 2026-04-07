@@ -1,15 +1,14 @@
 <?php
 
-namespace App\Tests\Functional\Infrastructure\Controller\User;
+namespace App\Tests\Functional\Infrastructure\Controller\Note;
 
-use App\Application\Command\RegisterUserCommand;
+use App\Application\Command\CreateNoteCommand;
 use App\Tests\Functional\FunctionalTestCase;
-use App\Tests\Helper;
 use Symfony\Component\Messenger\Transport\InMemory\InMemoryTransport;
 
-final class ControllerPasswordExposureTest extends FunctionalTestCase
+class CreateNoteControllerTest extends FunctionalTestCase
 {
-    public function test_controller_response_does_not_expose_password_and_dispatches_command(): void
+    public function test_successful_note_creation_returns_202_and_dispatches_command_to_inmemory_transport(): void
     {
         $container = static::getContainer();
 
@@ -19,13 +18,13 @@ final class ControllerPasswordExposureTest extends FunctionalTestCase
         $transport->reset();
 
         $payload = [
-            'email' => 'noexpose+1@example.com',
-            'password' => 'TopSecret123'
+            'ownerId' => 'testownerid123',
+            'content' => 'This is a test note content.',
         ];
 
         $this->client->request(
             'POST',
-            '/api/users',
+            '/api/notes',
             [],
             [],
             ['CONTENT_TYPE' => 'application/json', 'HTTP_X-API-Key' => 'secret'],
@@ -36,13 +35,6 @@ final class ControllerPasswordExposureTest extends FunctionalTestCase
         $this->assertSame(202, $response->getStatusCode());
 
         $data = json_decode($response->getContent(), true);
-        $this->assertIsArray($data);
-
-        // Ensure response does not contain password fields
-        $this->assertArrayNotHasKey('password', $data);
-        $this->assertArrayNotHasKey('password_hash', $data);
-        $this->assertArrayNotHasKey('passwordHash', $data);
-
         $this->assertArrayHasKey('id', $data);
         $responseId = $data['id'];
 
@@ -51,13 +43,12 @@ final class ControllerPasswordExposureTest extends FunctionalTestCase
 
         $envelope = $sent[0];
         $message = $envelope->getMessage();
-        $this->assertInstanceOf(RegisterUserCommand::class, $message);
-        $this->assertEquals($payload['email'], $message->email);
+        $this->assertInstanceOf(CreateNoteCommand::class, $message);
 
-        $this->assertEquals($payload['password'], $message->plainPassword);
+        $this->assertSame($payload['ownerId'], $message->ownerId);
+        $this->assertSame($payload['content'], $message->content);
 
         $msgId = (string)$message->id;
         $this->assertSame($responseId, $msgId);
-        $this->assertTrue((Helper::uuidV4Matcher())($msgId));
     }
 }

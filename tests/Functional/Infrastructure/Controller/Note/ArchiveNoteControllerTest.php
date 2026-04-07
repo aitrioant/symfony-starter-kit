@@ -1,14 +1,17 @@
 <?php
 
-namespace App\Tests\Functional\Infrastructure\Controller\User;
+namespace App\Tests\Functional\Infrastructure\Controller\Note;
 
-use App\Application\Command\RegisterUserCommand;
+use App\Application\Command\ArchiveNoteCommand;
 use App\Tests\Functional\FunctionalTestCase;
 use Symfony\Component\Messenger\Transport\InMemory\InMemoryTransport;
 
-final class RegisterUserControllerTest extends FunctionalTestCase
+class ArchiveNoteControllerTest extends FunctionalTestCase
 {
-    public function test_successful_user_creation_returns_202_and_dispatches_command_to_inmemory_transport(): void
+    private string $noteId;
+    private string $testOwnerId;
+
+    public function test_successful_note_archive_returns_202_and_dispatches_command_to_inmemory_transport(): void
     {
         $container = static::getContainer();
 
@@ -18,13 +21,12 @@ final class RegisterUserControllerTest extends FunctionalTestCase
         $transport->reset();
 
         $payload = [
-            'email' => 'newuser+3@example.com',
-            'password' => 'StrongPass1'
+            'ownerId' => $this->testOwnerId,
         ];
 
         $this->client->request(
             'POST',
-            '/api/users',
+            '/api/notes/' . $this->noteId . '/archive',
             [],
             [],
             ['CONTENT_TYPE' => 'application/json', 'HTTP_X-API-Key' => 'secret'],
@@ -34,37 +36,43 @@ final class RegisterUserControllerTest extends FunctionalTestCase
         $response = $this->client->getResponse();
         $this->assertSame(202, $response->getStatusCode());
 
-        $data = json_decode($response->getContent(), true);
-        $this->assertArrayHasKey('id', $data);
-        $responseId = $data['id'];
-
         $sent = $transport->getSent();
         $this->assertCount(1, $sent, 'Expected one message sent to sync transport (in-memory).');
 
         $envelope = $sent[0];
         $message = $envelope->getMessage();
-        $this->assertInstanceOf(RegisterUserCommand::class, $message);
+        $this->assertInstanceOf(ArchiveNoteCommand::class, $message);
 
-        $this->assertSame($payload['email'], $message->email);
-        $this->assertSame($payload['password'], $message->plainPassword);
+        $this->assertSame($payload['ownerId'], $message->ownerId);
 
         $msgId = (string)$message->id;
-        $this->assertSame($responseId, $msgId);
+        $this->assertSame($this->noteId, $msgId);
     }
 
-    public function test_malformed_json_returns_400(): void
+    protected function setUp(): void
     {
-        // deliberately malformed JSON
+        parent::setUp();
+        $this->client->disableReboot();
+
+        $this->testOwnerId = 'testownerid123';
+        $payload = [
+            'ownerId' => $this->testOwnerId,
+            'content' => 'This is a newly created test note content.',
+        ];
+
         $this->client->request(
             'POST',
-            '/api/users',
+            '/api/notes',
             [],
             [],
             ['CONTENT_TYPE' => 'application/json', 'HTTP_X-API-Key' => 'secret'],
-            '{bad json'
+            json_encode($payload)
         );
 
         $response = $this->client->getResponse();
-        $this->assertSame(400, $response->getStatusCode());
+        $data = json_decode($response->getContent(), true);
+        $this->assertArrayHasKey('id', $data);
+
+        $this->noteId = $data['id'];
     }
 }
