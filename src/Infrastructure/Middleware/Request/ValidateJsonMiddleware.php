@@ -23,7 +23,6 @@ class ValidateJsonMiddleware implements RequestMiddleware
                 return new JsonResponse(['error' => 'Malformed JSON'], 400);
             }
 
-            // Inject decoded JSON into request->request (like Symfony forms do)
             $request->request->replace($data);
         }
 

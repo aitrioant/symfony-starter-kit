@@ -16,39 +16,6 @@ use PHPUnit\Framework\TestCase;
 
 final class DoctrineNoteRepositoryTest extends TestCase
 {
-    public function testFindByIdReturnsDomainNotePreservingTimestampsAndArchivedState(): void
-    {
-        $id = (string)Id::new();
-        $orm = new OrmNote($id, 'c1', 'owner-1');
-        $orm->setArchived(true);
-
-        $createdAt = $orm->getCreatedAt();
-        $updatedAt = $orm->getUpdatedAt();
-
-        $repoMock = $this->createMock(EntityRepository::class);
-        $repoMock->expects($this->once())
-            ->method('find')
-            ->with($id)
-            ->willReturn($orm);
-
-        $em = $this->createMock(EntityManagerInterface::class);
-        $em->expects($this->once())
-            ->method('getRepository')
-            ->with(OrmNote::class)
-            ->willReturn($repoMock);
-
-        $repository = new DoctrineNoteRepository($em);
-
-        $domain = $repository->findById($id);
-
-        $this->assertNotNull($domain);
-        $this->assertTrue($domain->isArchived());
-        $this->assertSame('c1', (string)$domain->content());
-        // created/updated preservation expected by correct implementation
-        $this->assertSame($createdAt->format('Y-m-d H:i:s'), $domain->createdAt()->format('Y-m-d H:i:s'));
-        $this->assertSame($updatedAt->format('Y-m-d H:i:s'), $domain->updatedAt()->format('Y-m-d H:i:s'));
-    }
-
     public function testSaveCreatesOrmWhenNotFoundAndPersists(): void
     {
         $em = $this->createMock(EntityManagerInterface::class);
@@ -82,5 +49,38 @@ final class DoctrineNoteRepositoryTest extends TestCase
         $this->assertSame((string)$id, $captured->getId());
         $this->assertSame('abc', $captured->getContent());
         $this->assertSame('owner-z', $captured->getOwnerId());
+    }
+
+    public function testFindByIdReturnsDomainNotePreservingTimestampsAndArchivedState(): void
+    {
+        $id = (string)Id::new();
+        $orm = new OrmNote($id, 'c1', 'owner-1');
+        $orm->setArchived(true);
+
+        $createdAt = $orm->getCreatedAt();
+        $updatedAt = $orm->getUpdatedAt();
+
+        $repoMock = $this->createMock(EntityRepository::class);
+        $repoMock->expects($this->once())
+            ->method('find')
+            ->with($id)
+            ->willReturn($orm);
+
+        $em = $this->createMock(EntityManagerInterface::class);
+        $em->expects($this->once())
+            ->method('getRepository')
+            ->with(OrmNote::class)
+            ->willReturn($repoMock);
+
+        $repository = new DoctrineNoteRepository($em);
+
+        $domain = $repository->findById($id);
+
+        $this->assertNotNull($domain);
+        $this->assertTrue($domain->isArchived());
+        $this->assertSame('c1', (string)$domain->content());
+        // created/updated preservation expected by correct implementation
+        $this->assertSame($createdAt->format('Y-m-d H:i:s'), $domain->createdAt()->format('Y-m-d H:i:s'));
+        $this->assertSame($updatedAt->format('Y-m-d H:i:s'), $domain->updatedAt()->format('Y-m-d H:i:s'));
     }
 }
