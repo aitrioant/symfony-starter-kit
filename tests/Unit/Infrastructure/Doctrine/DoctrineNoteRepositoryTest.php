@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Integration\Infrastructure\Doctrine;
+namespace App\Tests\Unit\Infrastructure\Doctrine;
 
 use App\Domain\Entity\Note;
 use App\Domain\ValueObject\Id;

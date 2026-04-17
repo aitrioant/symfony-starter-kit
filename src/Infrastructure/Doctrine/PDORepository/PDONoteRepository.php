@@ -22,20 +22,26 @@ final readonly class PDONoteRepository
 
         if ($exists) {
             $sql = 'UPDATE notes SET content = :content, owner_id = :owner_id, archived = :archived, updated_at = COALESCE(:updated_at, NOW()) WHERE id = :id';
+            $params = [
+                ':id' => $row['id'],
+                ':content' => $row['content'],
+                ':owner_id' => $row['owner_id'],
+                ':archived' => $row['archived'],
+                ':updated_at' => $row['updated_at'] ?? null,
+            ];
         } else {
             $sql = 'INSERT INTO notes (id, content, owner_id, archived, created_at, updated_at) VALUES (:id, :content, :owner_id, :archived, COALESCE(:created_at, NOW()), COALESCE(:updated_at, NOW()))';
+            $params = [
+                ':id' => $row['id'],
+                ':content' => $row['content'],
+                ':owner_id' => $row['owner_id'],
+                ':archived' => $row['archived'],
+                ':created_at' => $row['created_at'] ?? null,
+                ':updated_at' => $row['updated_at'] ?? null,
+            ];
         }
 
         $stmt = $this->pdo->prepare($sql);
-        $params = [
-            ':id' => $row['id'],
-            ':content' => $row['content'],
-            ':owner_id' => $row['owner_id'],
-            ':archived' => $row['archived'],
-            ':created_at' => $row['created_at'] ?? null,
-            ':updated_at' => $row['updated_at'] ?? null,
-        ];
-
         $stmt->execute($params);
     }
 
