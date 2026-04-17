@@ -42,13 +42,10 @@ final class RegisterUserControllerTest extends TestCase
         $this->assertTrue((Helper::uuidV4Matcher())($data['id']));
     }
 
-    public function test_invoke_with_missing_fields_uses_empty_strings(): void
+    public function test_invoke_with_missing_fields_returns_400_and_does_not_dispatch(): void
     {
         $bus = $this->createMock(MessageBusInterface::class);
-        $bus->expects($this->once())
-            ->method('dispatch')
-            ->with($this->isInstanceOf(RegisterUserCommand::class))
-            ->willReturn(new Envelope(new RegisterUserCommand(Id::new(), '', '')));
+        $bus->expects($this->never())->method('dispatch');
 
         $controller = new RegisterUserController($bus);
 
@@ -57,10 +54,9 @@ final class RegisterUserControllerTest extends TestCase
         $response = $controller->__invoke($request);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertEquals(202, $response->getStatusCode());
+        $this->assertSame(400, $response->getStatusCode());
 
         $data = json_decode($response->getContent() ?: '{}', true);
-        $this->assertArrayHasKey('id', $data);
-        $this->assertTrue((Helper::uuidV4Matcher())($data['id']));
+        $this->assertArrayHasKey('error', $data);
     }
 }

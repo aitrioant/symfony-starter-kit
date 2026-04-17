@@ -11,7 +11,7 @@ class UpdateNoteControllerTest extends FunctionalTestCase
     private string $noteId;
     private string $testOwnerId;
 
-    public function test_successful_note_update_returns_202_and_dispatches_command_to_inmemory_transport(): void
+    public function test_update_endpoint_enqueues_command_and_returns_202(): void
     {
         $container = static::getContainer();
 
