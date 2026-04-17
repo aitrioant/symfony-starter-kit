@@ -12,88 +12,103 @@ use App\Infrastructure\Doctrine\Mapper\NoteMapper;
 use App\Infrastructure\Doctrine\PDORepository\PDONoteRepository;
 use DateTimeImmutable;
 use PDO;
-use PDOStatement;
 use PHPUnit\Framework\TestCase;
 
 final class PDONoteRepositoryTest extends TestCase
 {
-    public function testSavePerformsInsertWhenNotExists(): void
+    private PDO $pdo;
+    private PDONoteRepository $repo;
+
+    public function test_save_inserts_new_note_and_find_by_id_returns_it(): void
     {
-        $pdo = $this->createMock(PDO::class);
-        $selectStmt = $this->createMock(PDOStatement::class);
-        $insertStmt = $this->createMock(PDOStatement::class);
-
-        $pdo->expects($this->exactly(2))
-            ->method('prepare')
-            ->willReturnCallback(function (string $sql) use ($selectStmt, $insertStmt) {
-                if (strpos($sql, 'SELECT COUNT(1) FROM notes WHERE id = :id') !== false) {
-                    return $selectStmt;
-                }
-                if (strpos($sql, 'INSERT INTO notes') !== false) {
-                    return $insertStmt;
-                }
-                $this->fail('Unexpected SQL passed to prepare: ' . $sql);
-            });
-
-        $selectStmt->expects($this->once())
-            ->method('execute')
-            ->with($this->arrayHasKey(':id'));
-        $selectStmt->expects($this->once())
-            ->method('fetchColumn')
-            ->willReturn('0');
-
-        $insertStmt->expects($this->once())
-            ->method('execute')
-            ->with($this->callback(function (array $params) {
-                // required keys
-                return isset($params[':id'], $params[':content'], $params[':owner_id'], $params[':archived'], $params[':created_at'], $params[':updated_at']);
-            }));
-
-        $mapper = new NoteMapper();
-        $repo = new PDONoteRepository($pdo, $mapper);
-
+        $id = (string)Id::new();
         $created = new DateTimeImmutable('2023-01-01 10:00:00');
-        $note = new Note(Id::new(), new NoteContent('abc'), new NoteOwner('owner-x'), false, $created, $created);
+        $note = new Note(Id::fromString($id), new NoteContent('hello'), new NoteOwner('owner-x'), false, $created, $created);
 
-        $repo->save($note);
+        $this->repo->save($note);
+
+        $found = $this->repo->findById($id);
+        $this->assertNotNull($found);
+        $this->assertSame($id, (string)$found->id());
+        $this->assertSame('hello', (string)$found->content());
+        $this->assertSame('owner-x', (string)$found->owner());
+        $this->assertFalse($found->isArchived());
+        $this->assertSame($created->format('Y-m-d H:i:s'), $found->createdAt()->format('Y-m-d H:i:s'));
+
+        $this->assertSame(1, $this->countRows());
     }
 
-    public function testSavePerformsUpdateWhenExists(): void
+    private function countRows(): int
     {
-        $pdo = $this->createMock(PDO::class);
-        $selectStmt = $this->createMock(PDOStatement::class);
-        $updateStmt = $this->createMock(PDOStatement::class);
+        return (int)$this->pdo->query('SELECT COUNT(*) FROM notes')->fetchColumn();
+    }
 
-        $pdo->expects($this->exactly(2))
-            ->method('prepare')
-            ->willReturnCallback(function (string $sql) use ($selectStmt, $updateStmt) {
-                if (strpos($sql, 'SELECT COUNT(1) FROM notes WHERE id = :id') !== false) {
-                    return $selectStmt;
-                }
-                if (strpos($sql, 'UPDATE notes SET') !== false) {
-                    return $updateStmt;
-                }
-                $this->fail('Unexpected SQL passed to prepare: ' . $sql);
-            });
+    public function test_save_updates_existing_note_without_duplicating(): void
+    {
+        $id = (string)Id::new();
+        $created = new DateTimeImmutable('2023-01-01 10:00:00');
+        $original = new Note(Id::fromString($id), new NoteContent('original'), new NoteOwner('owner-y'), false, $created, $created);
 
-        $selectStmt->expects($this->once())
-            ->method('execute')
-            ->with($this->arrayHasKey(':id'));
-        $selectStmt->expects($this->once())
-            ->method('fetchColumn')
-            ->willReturn('1');
+        $this->repo->save($original);
 
-        $updateStmt->expects($this->once())
-            ->method('execute')
-            ->with($this->callback(function (array $params) {
-                return isset($params[':id'], $params[':content'], $params[':owner_id'], $params[':archived'], $params[':updated_at']);
-            }));
+        $updatedAt = new DateTimeImmutable('2023-01-02 12:00:00');
+        $updated = new Note(Id::fromString($id), new NoteContent('changed'), new NoteOwner('owner-y'), true, $created, $updatedAt);
 
-        $mapper = new NoteMapper();
-        $repo = new PDONoteRepository($pdo, $mapper);
+        $this->repo->save($updated);
 
-        $note = new Note(Id::new(), new NoteContent('updated'), new NoteOwner('owner-y'));
+        $this->assertSame(1, $this->countRows());
 
-        $repo->save($note);
+        $found = $this->repo->findById($id);
+        $this->assertNotNull($found);
+        $this->assertSame('changed', (string)$found->content());
+        $this->assertTrue($found->isArchived());
+        $this->assertSame($updatedAt->format('Y-m-d H:i:s'), $found->updatedAt()->format('Y-m-d H:i:s'));
+    }
+
+    public function test_find_by_id_returns_null_when_missing(): void
+    {
+        $this->assertNull($this->repo->findById((string)Id::new()));
+    }
+
+    public function test_find_by_owner_returns_only_that_owners_notes(): void
+    {
+        $ownerA = 'owner-a';
+        $ownerB = 'owner-b';
+
+        $this->repo->save(new Note(Id::new(), new NoteContent('a1'), new NoteOwner($ownerA)));
+        $this->repo->save(new Note(Id::new(), new NoteContent('a2'), new NoteOwner($ownerA)));
+        $this->repo->save(new Note(Id::new(), new NoteContent('b1'), new NoteOwner($ownerB)));
+
+        $aNotes = $this->repo->findByOwner($ownerA);
+        $this->assertCount(2, $aNotes);
+        foreach ($aNotes as $n) {
+            $this->assertSame($ownerA, (string)$n->owner());
+        }
+
+        $bNotes = $this->repo->findByOwner($ownerB);
+        $this->assertCount(1, $bNotes);
+        $this->assertSame('b1', (string)$bNotes[0]->content());
+    }
+
+    protected function setUp(): void
+    {
+        $this->pdo = new PDO('sqlite::memory:');
+        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        // The production SQL uses NOW() inside COALESCE; register it so SQLite can resolve the symbol.
+        $this->pdo->sqliteCreateFunction('now', static fn(): string => date('Y-m-d H:i:s'));
+
+        $this->pdo->exec(<<<'SQL'
+CREATE TABLE notes (
+  id TEXT PRIMARY KEY,
+  content TEXT NOT NULL,
+  owner_id TEXT NOT NULL,
+  archived INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+SQL
+        );
+
+        $this->repo = new PDONoteRepository($this->pdo, new NoteMapper());
     }
 }
