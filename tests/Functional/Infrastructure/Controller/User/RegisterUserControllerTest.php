@@ -8,7 +8,7 @@ use Symfony\Component\Messenger\Transport\InMemory\InMemoryTransport;
 
 final class RegisterUserControllerTest extends FunctionalTestCase
 {
-    public function test_successful_user_creation_returns_202_and_dispatches_command_to_inmemory_transport(): void
+    public function test_register_endpoint_enqueues_command_returns_202_and_does_not_leak_password(): void
     {
         $container = static::getContainer();
 
@@ -36,10 +36,13 @@ final class RegisterUserControllerTest extends FunctionalTestCase
 
         $data = json_decode($response->getContent(), true);
         $this->assertArrayHasKey('id', $data);
+        $this->assertArrayNotHasKey('password', $data);
+        $this->assertArrayNotHasKey('password_hash', $data);
+        $this->assertArrayNotHasKey('passwordHash', $data);
         $responseId = $data['id'];
 
         $sent = $transport->getSent();
-        $this->assertCount(1, $sent, 'Expected one message sent to sync transport (in-memory).');
+        $this->assertCount(1, $sent, 'Expected one message sent to async transport (in-memory).');
 
         $envelope = $sent[0];
         $message = $envelope->getMessage();

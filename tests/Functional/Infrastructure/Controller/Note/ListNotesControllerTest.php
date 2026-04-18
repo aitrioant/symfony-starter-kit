@@ -12,7 +12,7 @@ class ListNotesControllerTest extends FunctionalTestCase
     private string $noteId;
     private string $testOwnerId;
 
-    public function test_successful_note_listing_returns_202(): void
+    public function test_list_endpoint_returns_200_with_owner_notes(): void
     {
         $container = static::getContainer();
 

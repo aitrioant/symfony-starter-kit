@@ -16,26 +16,78 @@ final class PDOUserRepositoryTest extends TestCase
     private PDO $pdo;
     private PDOUserRepository $repo;
 
-    public function test_save_and_find(): void
+    public function test_find_by_id_returns_null_when_missing(): void
+    {
+        $this->assertNull($this->repo->findById('00000000-0000-4000-8000-000000000000'));
+    }
+
+    public function test_find_by_email_returns_null_when_missing(): void
+    {
+        $this->assertNull($this->repo->findByEmail('nobody@example.com'));
+    }
+
+    public function test_save_and_find_by_id_returns_persisted_user(): void
     {
         $id = '22222222-2222-4222-8222-222222222222';
-        $email = new Email('bob@example.com');
         $plain = 'integration-secret';
-        $hash = PasswordHash::fromHash(password_hash($plain, PASSWORD_DEFAULT));
-
-        $user = new User(Id::fromString($id), $email, $hash);
+        $user = new User(
+            Id::fromString($id),
+            new Email('bob@example.com'),
+            PasswordHash::fromHash(password_hash($plain, PASSWORD_DEFAULT))
+        );
 
         $this->repo->save($user);
 
-        $byId = $this->repo->findById($id);
-        $this->assertNotNull($byId);
-        $this->assertSame($id, $byId->id());
-        $this->assertSame('bob@example.com', (string)$byId->email());
-        $this->assertTrue($byId->verifyPassword($plain));
+        $found = $this->repo->findById($id);
+        $this->assertNotNull($found);
+        $this->assertSame($id, $found->id());
+        $this->assertSame('bob@example.com', (string)$found->email());
+        $this->assertTrue($found->verifyPassword($plain));
+    }
 
-        $byEmail = $this->repo->findByEmail('bob@example.com');
-        $this->assertNotNull($byEmail);
-        $this->assertSame($id, $byEmail->id());
+    public function test_save_and_find_by_email_returns_persisted_user(): void
+    {
+        $id = '33333333-3333-4333-8333-333333333333';
+        $user = new User(
+            Id::fromString($id),
+            new Email('alice@example.com'),
+            PasswordHash::fromHash(password_hash('pw', PASSWORD_DEFAULT))
+        );
+
+        $this->repo->save($user);
+
+        $found = $this->repo->findByEmail('alice@example.com');
+        $this->assertNotNull($found);
+        $this->assertSame($id, $found->id());
+        $this->assertSame('alice@example.com', (string)$found->email());
+    }
+
+    public function test_save_twice_with_same_id_updates_without_duplicating(): void
+    {
+        $id = '44444444-4444-4444-8444-444444444444';
+
+        $original = new User(
+            Id::fromString($id),
+            new Email('original@example.com'),
+            PasswordHash::fromHash(password_hash('first', PASSWORD_DEFAULT))
+        );
+        $this->repo->save($original);
+
+        $updated = new User(
+            Id::fromString($id),
+            new Email('updated@example.com'),
+            PasswordHash::fromHash(password_hash('second', PASSWORD_DEFAULT))
+        );
+        $this->repo->save($updated);
+
+        $count = (int)$this->pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
+        $this->assertSame(1, $count);
+
+        $found = $this->repo->findById($id);
+        $this->assertNotNull($found);
+        $this->assertSame('updated@example.com', (string)$found->email());
+        $this->assertTrue($found->verifyPassword('second'));
+        $this->assertFalse($found->verifyPassword('first'));
     }
 
     protected function setUp(): void

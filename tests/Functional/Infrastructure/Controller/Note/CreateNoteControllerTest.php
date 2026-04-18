@@ -8,7 +8,7 @@ use Symfony\Component\Messenger\Transport\InMemory\InMemoryTransport;
 
 class CreateNoteControllerTest extends FunctionalTestCase
 {
-    public function test_successful_note_creation_returns_202_and_dispatches_command_to_inmemory_transport(): void
+    public function test_create_endpoint_enqueues_command_and_returns_202(): void
     {
         $container = static::getContainer();
 

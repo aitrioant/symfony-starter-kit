@@ -11,27 +11,34 @@ use PHPUnit\Framework\TestCase;
 
 final class UserMapperTest extends TestCase
 {
-    public function test_toRow_and_toDomain_roundtrip(): void
+    public function test_toRow_extracts_user_fields(): void
     {
-        $mapper = new UserMapper();
-
         $id = '11111111-1111-4111-8111-111111111111';
-        $email = new Email('alice@example.com');
         $hash = PasswordHash::fromHash(password_hash('secret', PASSWORD_DEFAULT));
+        $user = new User(Id::fromString($id), new Email('alice@example.com'), $hash);
 
-        $user = new User(Id::fromString($id), $email, $hash);
-
-        $row = $mapper->toRow($user);
+        $row = (new UserMapper())->toRow($user);
 
         $this->assertSame($id, $row['id']);
         $this->assertSame('alice@example.com', $row['email']);
         $this->assertSame($hash->toString(), $row['password_hash']);
+    }
 
-        $reconstituted = $mapper->toDomain($row);
+    public function test_toDomain_builds_user_from_row(): void
+    {
+        $id = '11111111-1111-4111-8111-111111111111';
+        $hash = PasswordHash::fromHash(password_hash('secret', PASSWORD_DEFAULT));
 
-        $this->assertNotSame($user, $reconstituted);
-        $this->assertSame($user->id(), $reconstituted->id());
-        $this->assertSame((string)$user->email(), (string)$reconstituted->email());
-        $this->assertTrue($reconstituted->verifyPassword('secret'));
+        $row = [
+            'id' => $id,
+            'email' => 'alice@example.com',
+            'password_hash' => $hash->toString(),
+        ];
+
+        $user = (new UserMapper())->toDomain($row);
+
+        $this->assertSame($id, $user->id());
+        $this->assertSame('alice@example.com', (string)$user->email());
+        $this->assertTrue($user->verifyPassword('secret'));
     }
 }

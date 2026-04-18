@@ -33,7 +33,7 @@ final class UserTest extends TestCase
         new User(Id::fromString($id), new Email($email), PasswordHash::fromHash($emptyHash));
     }
 
-    public function test_change_email_returns_new_instance_and_validates(): void
+    public function test_change_email_returns_new_instance_with_new_email(): void
     {
         $id = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
         $email = 'user@example.com';
@@ -44,14 +44,20 @@ final class UserTest extends TestCase
         $newEmail = 'new@example.com';
         $newUser = $user->changeEmail($newEmail);
 
-        // immutability: a new instance should be returned and original unchanged
         $this->assertNotSame($user, $newUser);
         $this->assertSame($email, $user->email());
         $this->assertSame($newEmail, $newUser->email());
+    }
 
-        // invalid email for changeEmail should throw
+    public function test_change_email_throws_on_invalid_email(): void
+    {
+        $id = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+        $hash = password_hash('secret', PASSWORD_DEFAULT);
+
+        $user = new User(Id::fromString($id), new Email('user@example.com'), PasswordHash::fromHash($hash));
+
         $this->expectException(InvalidEmail::class);
-        $newUser->changeEmail('invalid-email');
+        $user->changeEmail('invalid-email');
     }
 
     public function test_verify_password_behaviour(): void

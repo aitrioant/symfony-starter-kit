@@ -4,6 +4,7 @@ namespace App\Infrastructure\Controller\Note;
 
 use App\Application\Command\CreateNoteCommand;
 use App\Domain\ValueObject\Id;
+use App\Domain\ValueObject\NoteContent;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,6 +25,13 @@ class CreateNoteController extends AbstractController
         $data = json_decode($request->getContent() ?: '', true);
         if (!is_array($data) || empty($data['ownerId']) || empty($data['content'])) {
             return new JsonResponse(['error' => 'ownerId and content are required'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (mb_strlen($data['content']) > NoteContent::MAX_LENGTH) {
+            return new JsonResponse(
+                ['error' => sprintf('content exceeds %d characters', NoteContent::MAX_LENGTH)],
+                Response::HTTP_UNPROCESSABLE_ENTITY
+            );
         }
 
         $id = Id::new();
