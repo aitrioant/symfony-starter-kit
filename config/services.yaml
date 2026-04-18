@@ -25,6 +25,12 @@ services:
     App\Application\Security\PasswordHasherInterface:
         alias: 'App\Infrastructure\Security\PHPPasswordHasher'
 
+    App\Domain\Service\AiSummaryService:
+        alias: 'App\Infrastructure\Ai\OpenAiSummaryService'
+
+    App\Application\Service\UserExistsChecker:
+        alias: 'App\Infrastructure\User\UserRepositoryExistsChecker'
+
     Symfony\Component\PasswordHasher\Hasher\NativePasswordHasher:
         public: true
 
