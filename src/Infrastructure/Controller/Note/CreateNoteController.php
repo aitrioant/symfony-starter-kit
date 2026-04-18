@@ -36,6 +36,7 @@ class CreateNoteController extends AbstractController
 
         $id = Id::new();
         $command = new CreateNoteCommand($id, $data['ownerId'], $data['content']);
+
         $this->commandBus->dispatch($command);
 
         return new JsonResponse(['id' => (string)$id], Response::HTTP_ACCEPTED);

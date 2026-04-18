@@ -4,6 +4,7 @@ namespace App\Tests\Functional\Infrastructure\Controller\Note;
 
 use App\Application\Command\CreateNoteCommand;
 use App\Application\Handler\CreateNoteHandler;
+use App\Application\Service\UserExistsChecker;
 use App\Domain\ValueObject\Id;
 use App\Tests\Functional\FunctionalTestCase;
 
@@ -43,6 +44,13 @@ class ListNotesControllerTest extends FunctionalTestCase
         $this->client->disableReboot();
 
         $this->testOwnerId = 'testownerid123';
+
+        $this->replaceService(UserExistsChecker::class, new class implements UserExistsChecker {
+            public function exists(string $userId): bool
+            {
+                return true;
+            }
+        });
 
         // generate id and create command
         $id = (string)Id::new();
